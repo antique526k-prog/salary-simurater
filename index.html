@@ -367,13 +367,6 @@
         </div>
       </div>
       <div class="field">
-        <label for="salesTicket">チケット売上</label>
-        <div class="inputRow">
-          <input type="number" id="salesTicket" value="0" step="1000">
-          <span class="unit">円</span>
-        </div>
-      </div>
-      <div class="field">
         <label for="salesRetail">店販売上</label>
         <div class="inputRow">
           <input type="number" id="salesRetail" value="30000" step="1000">
@@ -429,7 +422,7 @@
         <div class="lineItem"><span class="lbl">固定給</span><span class="val" id="out_fixed">¥0</span></div>
 
         <div class="sectionLabel">歩合給</div>
-        <div class="lineItem"><span class="lbl">評価額<small>指名売上＋チケット＋フリー売上÷2</small></span><span class="val" id="out_hyoka">¥0</span></div>
+        <div class="lineItem"><span class="lbl">評価額<small>指名売上＋フリー売上÷2</small></span><span class="val" id="out_hyoka">¥0</span></div>
         <div class="lineItem"><span class="lbl">技術歩合率</span><span class="val" id="out_rate">0%</span></div>
         <div class="lineItem"><span class="lbl">技術歩合</span><span class="val" id="out_techcomm">¥0</span></div>
         <div class="lineItem"><span class="lbl">店販歩合（10%）</span><span class="val" id="out_retailcomm">¥0</span></div>
@@ -440,16 +433,25 @@
           <span class="val" id="out_gross">¥0</span>
         </div>
 
-        <div class="sectionLabel">控除（概算）</div>
+        <div class="sectionLabel">控除（本人負担・概算）</div>
         <div class="lineItem"><span class="lbl">健康保険</span><span class="val" id="out_kenpo">¥0</span></div>
         <div class="lineItem"><span class="lbl">介護保険</span><span class="val" id="out_kaigo">¥0</span></div>
         <div class="lineItem"><span class="lbl">厚生年金</span><span class="val" id="out_nenkin">¥0</span></div>
         <div class="lineItem"><span class="lbl">雇用保険</span><span class="val" id="out_koyou">¥0</span></div>
         <div class="lineItem"><span class="lbl">源泉所得税</span><span class="val" id="out_gensen">¥0</span></div>
+        <div class="lineItem"><span class="lbl">市県民税<small>概算10%（本来は前年所得ベース）</small></span><span class="val" id="out_juumin">¥0</span></div>
 
         <div class="govBox">
-          <div class="ttl">🏛 国に払っている額（社保＋源泉税 合計）</div>
-          <div class="amt" id="out_gov">¥0</div>
+          <div class="ttl">🙋 あなたが国・自治体に払っている額</div>
+          <div class="amt" id="out_gov_personal">¥0</div>
+        </div>
+
+        <div class="govBox" style="background:#EFF2EA;border-color:#B9CBB0;">
+          <div class="ttl">🏢 会社が（あなたの分として）国に払っている額</div>
+          <div class="amt" id="out_gov_company" style="color:#4B6B4F;">¥0</div>
+          <div style="font-size:10.5px;color:var(--ink-soft);margin-top:6px;line-height:1.7;">
+            健保・介護・厚生年金の会社折半分＋雇用保険の会社負担分＋労災保険＋子ども・子育て支援金（すべて会社のみ負担）
+          </div>
         </div>
 
         <div class="takehome">
@@ -471,6 +473,8 @@
       <li>Dayの歩合は2026年6月以降の新テーブル（新歩合②）を使用。このテーブルでは固定給を含まない歩合オンリー方式として再現しています（6月分の実データがそうなっていたため）。違ってたら教えてください。</li>
       <li>社会保険料は兵庫県・協会けんぽの令和8年度料率（健保10.12%／介護1.62%／厚生年金18.3%／雇用保険0.55%）を月給にそのまま掛けた概算です。実際は標準報酬月額表を使うため多少ズレます。</li>
       <li>源泉所得税は令和8年分 月額表（甲欄）を実データで再現しているので、この部分は精度高めです。</li>
+      <li>市県民税は本来「前年の所得」を元に計算するものですが、ここではイメージしやすいよう当月の課税対象額×10%で概算してます（実際は1年遅れて反映されます）。</li>
+      <li>会社負担分は、健保・介護・厚生年金の折半分に加えて、雇用保険（会社負担分0.90%概算）・労災保険（美容業目安0.30%）・子ども子育て支援金（0.23%、令和8年4月分〜）を会社のみ負担として上乗せしてます。すべて概算です。</li>
     </ul>
   </div>
 </div>
@@ -583,7 +587,6 @@ function recalc(){
   const hours = parseFloat(el('hours').value) || 0;
   const salesTotal = parseFloat(el('salesTotal').value) || 0;
   const salesDesignated = Math.min(parseFloat(el('salesDesignated').value) || 0, salesTotal);
-  const salesTicket = parseFloat(el('salesTicket').value) || 0;
   const salesRetail = parseFloat(el('salesRetail').value) || 0;
   const designatedCount = parseFloat(el('designatedCount').value) || 0;
   const attendance80 = el('attendance80').checked;
@@ -609,7 +612,7 @@ function recalc(){
 
   // 評価額
   const freeSales = Math.max(salesTotal - salesDesignated, 0);
-  const hyoka = salesDesignated + salesTicket + freeSales/2;
+  const hyoka = salesDesignated + freeSales/2;
   el('out_hyoka').textContent = yen(hyoka);
 
   // 歩合率
@@ -635,27 +638,41 @@ function recalc(){
   const gross = fixedPay + techComm + retailComm + meiComm;
   el('out_gross').textContent = yen(gross);
 
-  // 控除（概算）
-  const kenpo = Math.round(gross * 0.0506);
-  const kaigo = over40 ? Math.round(gross * 0.0081) : 0;
-  const nenkinBase = Math.min(gross, 650000); // 上限概算
-  const nenkin = Math.round(nenkinBase * 0.0915);
-  const koyou = Math.floor(gross * 0.0055);
-  const shaho = kenpo + kaigo + nenkin + koyou;
+  // 控除（本人負担・概算） 兵庫県 協会けんぽ 令和8年度料率ベース、労使折半
+  const kenpo = Math.round(gross * 0.0506);       // 健保 10.12%/2
+  const kaigo = over40 ? Math.round(gross * 0.0081) : 0; // 介護 1.62%/2
+  const nenkinBase = Math.min(gross, 650000);     // 厚生年金 上限概算
+  const nenkin = Math.round(nenkinBase * 0.0915); // 18.3%/2
+  const koyou = Math.floor(gross * 0.0055);       // 雇用保険（本人負担分）
+  const shahoPersonal = kenpo + kaigo + nenkin + koyou;
 
   el('out_kenpo').textContent = yen(kenpo);
   el('out_kaigo').textContent = yen(kaigo);
   el('out_nenkin').textContent = yen(nenkin);
   el('out_koyou').textContent = yen(koyou);
 
-  const taxable = Math.max(gross - shaho, 0);
+  const taxable = Math.max(gross - shahoPersonal, 0);
   const gensen = calcTax(taxable, dependents);
   el('out_gensen').textContent = yen(gensen);
 
-  const gov = shaho + gensen;
-  el('out_gov').textContent = yen(gov);
+  // 市県民税（概算：本来は前年所得ベース。ここでは今月の課税対象額×10%で概算）
+  const juuminzei = Math.round(taxable * 0.10);
+  el('out_juumin').textContent = yen(juuminzei);
 
-  const net = gross - shaho - gensen;
+  const govPersonal = shahoPersonal + gensen + juuminzei;
+  el('out_gov_personal').textContent = yen(govPersonal);
+
+  // 会社負担（概算）
+  const kenpoCo = kenpo;          // 健保 会社折半分（同額）
+  const kaigoCo = kaigo;          // 介護 会社折半分（同額）
+  const nenkinCo = nenkin;        // 厚生年金 会社折半分（同額）
+  const koyouCo = Math.floor(gross * 0.0090);  // 雇用保険 会社負担分（概算0.90%）
+  const rousai = Math.floor(gross * 0.0030);   // 労災保険（美容業目安0.3%、会社のみ）
+  const kosodate = Math.floor(gross * 0.0023); // 子ども・子育て支援金0.23%（会社のみ）
+  const govCompany = kenpoCo + kaigoCo + nenkinCo + koyouCo + rousai + kosodate;
+  el('out_gov_company').textContent = yen(govCompany);
+
+  const net = gross - shahoPersonal - gensen - juuminzei;
   el('out_net').textContent = yen(net);
 }
 
