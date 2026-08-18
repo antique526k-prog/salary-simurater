@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>給与シミュレーター | HAIR POCKET</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EDE6D8;
+    --paper2:#F5F0E6;
+    --ink:#2B2320;
+    --ink-soft:#6B5F52;
+    --accent:#7B3B41;
+    --accent-2:#B08D57;
+    --line:#D3C4AC;
+    --good:#4B6B4F;
+    --shadow: 0 18px 40px rgba(43,35,32,.16);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background: radial-gradient(1200px 600px at 10% -10%, #F8F3E8 0%, var(--paper) 55%, #E4DAC5 100%);
+    color:var(--ink);
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    padding:32px 16px 60px;
+  }
+  .wrap{max-width:1080px;margin:0 auto;}
+  header{
+    text-align:center;
+    margin-bottom:28px;
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    letter-spacing:.28em;
+    font-size:11px;
+    color:var(--accent);
+    text-transform:uppercase;
+    margin-bottom:8px;
+  }
+  h1{
+    font-family:'Shippori Mincho', serif;
+    font-weight:700;
+    font-size:clamp(26px,4vw,38px);
+    margin:0 0 6px;
+    letter-spacing:.03em;
+  }
+  header p{
+    color:var(--ink-soft);
+    font-size:13.5px;
+    margin:0;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap:26px;
+    align-items:start;
+  }
+  @media(max-width:860px){ .grid{grid-template-columns:1fr;} }
+
+  /* ---- Input card ---- */
+  .card{
+    background:var(--paper2);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:26px 24px;
+    box-shadow: var(--shadow);
+  }
+  .card h2{
+    font-family:'Shippori Mincho',serif;
+    font-size:17px;
+    margin:0 0 18px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .card h2::before{
+    content:"";
+    width:6px;height:6px;border-radius:50%;
+    background:var(--accent);display:inline-block;
+  }
+  fieldset{
+    border:none;margin:0 0 18px;padding:0;
+  }
+  legend{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin-bottom:8px;
+    font-weight:700;
+  }
+  .seg{
+    display:flex;
+    gap:6px;
+    background:#E7DEC9;
+    padding:4px;
+    border-radius:10px;
+  }
+  .seg label{
+    flex:1;
+    text-align:center;
+    font-size:12.5px;
+    padding:8px 4px;
+    border-radius:7px;
+    cursor:pointer;
+    color:var(--ink-soft);
+    font-weight:700;
+    transition:.15s;
+    user-select:none;
+  }
+  .seg input{display:none;}
+  .seg input:checked + label{
+    background:var(--accent);
+    color:#fff;
+    box-shadow:0 4px 10px rgba(123,59,65,.35);
+  }
+  .field{margin-bottom:14px;}
+  .field label{
+    display:block;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin-bottom:5px;
+    font-weight:500;
+  }
+  .field .hint{
+    font-size:10.5px;
+    color:#9A8C78;
+    margin-top:3px;
+  }
+  .inputRow{position:relative;}
+  .inputRow input[type=number]{
+    width:100%;
+    padding:10px 44px 10px 12px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:15px;
+    background:#fff;
+    color:var(--ink);
+  }
+  .inputRow input[type=number]:focus{outline:2px solid var(--accent-2);outline-offset:1px;}
+  .unit{
+    position:absolute;right:12px;top:50%;transform:translateY(-50%);
+    font-size:12px;color:var(--ink-soft);
+  }
+  select{
+    width:100%;padding:10px 12px;border:1px solid var(--line);
+    border-radius:8px;background:#fff;font-size:14px;color:var(--ink);
+    font-family:'Zen Kaku Gothic New',sans-serif;
+  }
+  .checkline{
+    display:flex;align-items:center;gap:8px;
+    font-size:13px;color:var(--ink);
+    padding:8px 0;
+  }
+  .checkline input{width:16px;height:16px;accent-color:var(--accent);}
+  .subnote{
+    background:#F8EFE0;
+    border:1px dashed var(--accent-2);
+    border-radius:8px;
+    padding:10px 12px;
+    font-size:11.5px;
+    color:var(--ink-soft);
+    line-height:1.6;
+    margin-top:6px;
+  }
+
+  /* ---- Receipt / payslip ---- */
+  .receipt{
+    background:#FFFDF8;
+    border-radius:4px;
+    position:relative;
+    box-shadow: var(--shadow);
+    padding:0 0 22px;
+    overflow:hidden;
+  }
+  .perf{
+    height:14px;
+    background-image: radial-gradient(circle at 10px 7px, var(--paper) 6px, transparent 7px);
+    background-size:20px 14px;
+    background-repeat:repeat-x;
+    background-color:var(--accent);
+  }
+  .receiptHead{
+    background:var(--accent);
+    color:#F7EFE1;
+    padding:20px 26px 26px;
+    text-align:center;
+  }
+  .receiptHead .store{
+    font-family:'Shippori Mincho',serif;
+    font-size:20px;
+    letter-spacing:.08em;
+  }
+  .receiptHead .sub{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:.18em;
+    opacity:.75;
+    margin-top:4px;
+    text-transform:uppercase;
+  }
+  .receiptBody{padding:22px 26px 0;}
+  .lineItem{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    font-size:13.5px;
+    padding:6px 0;
+    border-bottom:1px dotted var(--line);
+  }
+  .lineItem .lbl{color:var(--ink-soft);}
+  .lineItem .lbl small{display:block;font-size:10px;color:#AA9C86;margin-top:1px;}
+  .lineItem .val{
+    font-family:'JetBrains Mono',monospace;
+    font-weight:600;
+    font-variant-numeric: tabular-nums;
+  }
+  .sectionLabel{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:var(--accent-2);
+    margin:20px 0 4px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .sectionLabel::after{
+    content:"";flex:1;height:1px;background:var(--line);
+  }
+  .total{
+    margin-top:16px;
+    background:#F8EFE0;
+    border-radius:10px;
+    padding:16px 18px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .total .lbl{font-size:13px;font-weight:700;color:var(--ink);}
+  .total .val{
+    font-family:'JetBrains Mono',monospace;
+    font-size:24px;font-weight:700;color:var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .takehome{
+    margin-top:10px;
+    background:var(--ink);
+    border-radius:10px;
+    padding:18px;
+    text-align:center;
+  }
+  .takehome .lbl{
+    color:#D8CBB6;font-size:11px;letter-spacing:.14em;
+    font-family:'JetBrains Mono',monospace;
+    text-transform:uppercase;
+  }
+  .takehome .val{
+    color:#fff;font-size:32px;font-weight:700;
+    font-family:'JetBrains Mono',monospace;
+    margin-top:4px;
+    font-variant-numeric: tabular-nums;
+  }
+  .govBox{
+    margin-top:14px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px 16px;
+    background:#FBF7EE;
+  }
+  .govBox .ttl{font-size:11.5px;color:var(--ink-soft);margin-bottom:6px;font-weight:700;}
+  .govBox .amt{
+    font-family:'JetBrains Mono',monospace;
+    font-size:20px;font-weight:700;color:#7A5A2E;
+  }
+  .barcode{
+    margin:20px 26px 0;
+    height:34px;
+    background-image: repeating-linear-gradient(90deg, var(--ink) 0px, var(--ink) 2px, transparent 2px, transparent 5px, var(--ink) 5px, var(--ink) 6px, transparent 6px, transparent 10px);
+    opacity:.75;
+  }
+  .stamp{
+    text-align:center;
+    font-family:'JetBrains Mono',monospace;
+    font-size:9.5px;
+    letter-spacing:.2em;
+    color:#AA9C86;
+    margin:10px 26px 0;
+  }
+  .notes{
+    max-width:1080px;margin:22px auto 0;
+    background:rgba(255,253,248,.7);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:16px 20px;
+    font-size:12px;
+    color:var(--ink-soft);
+    line-height:1.9;
+  }
+  .notes b{color:var(--accent);}
+  .notes ul{margin:6px 0 0;padding-left:18px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">HAIR POCKET — NEW BASIC</div>
+    <h1>給与シミュレーター</h1>
+    <p>年数・売上・指名・店販を入れると、当月の見込み給与（額面〜手取り）が出ます</p>
+  </header>
+
+  <div class="grid">
+    <!-- INPUT -->
+    <div class="card">
+      <h2>入力</h2>
+
+      <fieldset>
+        <legend>勤務形態</legend>
+        <div class="seg" id="segType">
+          <input type="radio" name="empType" id="t_regular" value="regular" checked><label for="t_regular">正社員</label>
+          <input type="radio" name="empType" id="t_part" value="part"><label for="t_part">パート</label>
+          <input type="radio" name="empType" id="t_day" value="day"><label for="t_day">Day</label>
+        </div>
+      </fieldset>
+
+      <fieldset id="qualBlock">
+        <legend>資格</legend>
+        <div class="seg">
+          <input type="radio" name="qual" id="q_a" value="A" checked><label for="q_a">有資格</label>
+          <input type="radio" name="qual" id="q_c" value="C"><label for="q_c">無資格</label>
+        </div>
+      </fieldset>
+
+      <div class="field">
+        <label for="years">勤続年数</label>
+        <div class="inputRow">
+          <input type="number" id="years" value="3" min="0" max="30">
+          <span class="unit">年</span>
+        </div>
+        <div class="hint" id="gradeHint"></div>
+      </div>
+
+      <div class="field" id="hoursBlock" style="display:none;">
+        <label for="hours">月間実働時間</label>
+        <div class="inputRow">
+          <input type="number" id="hours" value="120" min="0" max="250">
+          <span class="unit">時間</span>
+        </div>
+      </div>
+
+      <div class="sectionLabel">売上入力</div>
+
+      <div class="field">
+        <label for="salesTotal">技術売上（合計）</label>
+        <div class="inputRow">
+          <input type="number" id="salesTotal" value="1000000" step="10000">
+          <span class="unit">円</span>
+        </div>
+      </div>
+      <div class="field">
+        <label for="salesDesignated">指名売上（技術売上のうち）</label>
+        <div class="inputRow">
+          <input type="number" id="salesDesignated" value="600000" step="10000">
+          <span class="unit">円</span>
+        </div>
+      </div>
+      <div class="field">
+        <label for="salesTicket">チケット売上</label>
+        <div class="inputRow">
+          <input type="number" id="salesTicket" value="0" step="1000">
+          <span class="unit">円</span>
+        </div>
+      </div>
+      <div class="field">
+        <label for="salesRetail">店販売上</label>
+        <div class="inputRow">
+          <input type="number" id="salesRetail" value="30000" step="1000">
+          <span class="unit">円</span>
+        </div>
+      </div>
+      <div class="field">
+        <label for="designatedCount">指名数</label>
+        <div class="inputRow">
+          <input type="number" id="designatedCount" value="80" step="1">
+          <span class="unit">人</span>
+        </div>
+      </div>
+
+      <div class="field" id="attendanceBlock" style="display:none;">
+        <div class="checkline">
+          <input type="checkbox" id="attendance80" checked>
+          <label for="attendance80">出勤率8割以上</label>
+        </div>
+      </div>
+
+      <div class="sectionLabel">控除まわり（概算）</div>
+      <div class="checkline">
+        <input type="checkbox" id="over40">
+        <label for="over40">40歳以上（介護保険 対象）</label>
+      </div>
+      <div class="field">
+        <label for="dependents">扶養人数</label>
+        <select id="dependents">
+          <option value="0">0人</option>
+          <option value="1">1人</option>
+          <option value="2">2人</option>
+          <option value="3">3人以上</option>
+        </select>
+      </div>
+
+      <div class="subnote">
+        指名歩合は「指名数×100円」の仮ロジックで計算してます（実際の運用と違うのでようすけさんと後日すり合わせ予定）。住民税・通勤手当・残業代は含みません。
+      </div>
+    </div>
+
+    <!-- OUTPUT (receipt) -->
+    <div class="receipt">
+      <div class="receiptHead">
+        <div class="store">HAIR POCKET</div>
+        <div class="sub">Salary Estimate Slip</div>
+      </div>
+      <div class="perf"></div>
+      <div class="receiptBody">
+
+        <div class="sectionLabel">固定給</div>
+        <div class="lineItem"><span class="lbl" id="gradeLine">等級</span><span class="val" id="out_grade">—</span></div>
+        <div class="lineItem"><span class="lbl">固定給</span><span class="val" id="out_fixed">¥0</span></div>
+
+        <div class="sectionLabel">歩合給</div>
+        <div class="lineItem"><span class="lbl">評価額<small>指名売上＋チケット＋フリー売上÷2</small></span><span class="val" id="out_hyoka">¥0</span></div>
+        <div class="lineItem"><span class="lbl">技術歩合率</span><span class="val" id="out_rate">0%</span></div>
+        <div class="lineItem"><span class="lbl">技術歩合</span><span class="val" id="out_techcomm">¥0</span></div>
+        <div class="lineItem"><span class="lbl">店販歩合（10%）</span><span class="val" id="out_retailcomm">¥0</span></div>
+        <div class="lineItem"><span class="lbl">指名歩合（仮）</span><span class="val" id="out_meicomm">¥0</span></div>
+
+        <div class="total">
+          <span class="lbl">給与支給額（額面）</span>
+          <span class="val" id="out_gross">¥0</span>
+        </div>
+
+        <div class="sectionLabel">控除（概算）</div>
+        <div class="lineItem"><span class="lbl">健康保険</span><span class="val" id="out_kenpo">¥0</span></div>
+        <div class="lineItem"><span class="lbl">介護保険</span><span class="val" id="out_kaigo">¥0</span></div>
+        <div class="lineItem"><span class="lbl">厚生年金</span><span class="val" id="out_nenkin">¥0</span></div>
+        <div class="lineItem"><span class="lbl">雇用保険</span><span class="val" id="out_koyou">¥0</span></div>
+        <div class="lineItem"><span class="lbl">源泉所得税</span><span class="val" id="out_gensen">¥0</span></div>
+
+        <div class="govBox">
+          <div class="ttl">🏛 国に払っている額（社保＋源泉税 合計）</div>
+          <div class="amt" id="out_gov">¥0</div>
+        </div>
+
+        <div class="takehome">
+          <div class="lbl">Take-Home / 手取り額（概算）</div>
+          <div class="val" id="out_net">¥0</div>
+        </div>
+
+      </div>
+      <div class="barcode"></div>
+      <div class="stamp">HAIR POCKET · NEW BASIC · ESTIMATE ONLY — 概算値です</div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <b>この数字について：</b>実際の給与計算（社保は標準報酬月額表、住民税は前年所得ベース等）とは異なる、あくまで「売上を上げたらこれくらい」のイメージを掴むための概算ツールです。
+    <ul>
+      <li>技術歩合率・店販歩合(10%)・評価額の計算式は実際の給与シートのロジックをそのまま再現しています。</li>
+      <li>指名歩合は「指名数×100円」の仮ロジック。実運用と違うとのことなので、確定ロジックが決まったら差し替えます。</li>
+      <li>Dayの歩合は2026年6月以降の新テーブル（新歩合②）を使用。このテーブルでは固定給を含まない歩合オンリー方式として再現しています（6月分の実データがそうなっていたため）。違ってたら教えてください。</li>
+      <li>社会保険料は兵庫県・協会けんぽの令和8年度料率（健保10.12%／介護1.62%／厚生年金18.3%／雇用保険0.55%）を月給にそのまま掛けた概算です。実際は標準報酬月額表を使うため多少ズレます。</li>
+      <li>源泉所得税は令和8年分 月額表（甲欄）を実データで再現しているので、この部分は精度高めです。</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+// ---- master data ----
+const GRADE_TABLE = {
+  A9:[221000,29000], A8:[219400,28600], A7:[215900,28100], A6:[212400,27600],
+  A5:[208800,27200], A4:[205300,26700], A3:[201800,26200], A2:[198200,25800], A1:[194700,25300],
+  C7:[216500,12500], C6:[212600,12400], C5:[208800,12200], C4:[205100,11900],
+  C3:[201300,11700], C2:[197500,11500], C1:[193800,11200]
+};
+
+// 標準テーブル（正社員・パート）: [売上成果しきい値, 歩合率]
+const RATE_STD = [
+  [100000,0.04],[200000,0.045],[300000,0.047],[400000,0.049],[500000,0.049],
+  [600000,0.056],[700000,0.07],[800000,0.087],[900000,0.087],[1000000,0.105],
+  [1100000,0.11],[1200000,0.115],[1300000,0.12],[1400000,0.125],[1500000,0.13],
+  [1600000,0.136],[1700000,0.145],[1800000,0.153],[1900000,0.156],[2000000,0.16],
+  [2100000,0.164],[2200000,0.168],[2300000,0.172],[2400000,0.176],[2500000,0.18]
+];
+
+// Day用（新歩合②, 6月以降）: [売上しきい値, 8割以上, 8割未満]
+const RATE_DAY = [
+  [500000,0.40,0.39],[550000,0.40,0.39],[600000,0.40,0.39],[650000,0.40,0.39],
+  [700000,0.41,0.40],[750000,0.41,0.40],[800000,0.42,0.41],[850000,0.42,0.41],
+  [900000,0.42,0.41],[950000,0.42,0.41],[1000000,0.42,0.41],[1050000,0.42,0.41],
+  [1100000,0.43,0.42],[1150000,0.43,0.42],[1200000,0.44,0.43],[1250000,0.44,0.43],
+  [1300000,0.44,0.43],[1350000,0.44,0.43],[1400000,0.44,0.43]
+];
+
+function lookupRate(table, x){
+  if(x < 99999) return 0;
+  let rate = 0;
+  for(const row of table){ if(x >= row[0]) rate = row; else break; }
+  return rate === 0 ? 0 : rate;
+}
+
+// ---- 源泉税 月額表（令和8年 甲欄）[以上, 未満, 0人, 1人, 2人, 3人]
+const TAX_TABLE = [[105000, 107000, 170, 0, 0, 0], [107000, 109000, 280, 0, 0, 0], [109000, 111000, 380, 0, 0, 0], [111000, 113000, 480, 0, 0, 0], [113000, 115000, 580, 0, 0, 0], [115000, 117000, 680, 0, 0, 0], [117000, 119000, 790, 0, 0, 0], [119000, 121000, 890, 0, 0, 0], [121000, 123000, 990, 0, 0, 0], [123000, 125000, 1090, 0, 0, 0], [125000, 127000, 1190, 0, 0, 0], [127000, 129000, 1300, 0, 0, 0], [129000, 131000, 1400, 0, 0, 0], [131000, 133000, 1500, 0, 0, 0], [133000, 135000, 1600, 0, 0, 0], [135000, 137000, 1710, 0, 0, 0], [137000, 139000, 1810, 190, 0, 0], [139000, 141000, 1910, 300, 0, 0], [141000, 143000, 2010, 400, 0, 0], [143000, 145000, 2110, 500, 0, 0], [145000, 147000, 2220, 600, 0, 0], [147000, 149000, 2320, 700, 0, 0], [149000, 151000, 2420, 810, 0, 0], [151000, 153000, 2520, 910, 0, 0], [153000, 155000, 2620, 1010, 0, 0], [155000, 157000, 2730, 1110, 0, 0], [157000, 159000, 2830, 1210, 0, 0], [159000, 161000, 2910, 1300, 0, 0], [161000, 163000, 2980, 1370, 0, 0], [163000, 165000, 3050, 1440, 0, 0], [165000, 167000, 3120, 1510, 0, 0], [167000, 169000, 3200, 1580, 0, 0], [169000, 171000, 3270, 1650, 0, 0], [171000, 173000, 3340, 1730, 100, 0], [173000, 175000, 3410, 1800, 170, 0], [175000, 177000, 3480, 1870, 250, 0], [177000, 179000, 3550, 1940, 320, 0], [179000, 181000, 3620, 2010, 390, 0], [181000, 183000, 3700, 2080, 460, 0], [183000, 185000, 3770, 2150, 530, 0], [185000, 187000, 3840, 2230, 600, 0], [187000, 189000, 3910, 2300, 670, 0], [189000, 191000, 3980, 2370, 750, 0], [191000, 193000, 4050, 2440, 820, 0], [193000, 195000, 4120, 2510, 890, 0], [195000, 197000, 4200, 2580, 960, 0], [197000, 199000, 4270, 2650, 1030, 0], [199000, 201000, 4340, 2730, 1100, 0], [201000, 203000, 4410, 2800, 1170, 0], [203000, 205000, 4480, 2870, 1250, 0], [205000, 207000, 4550, 2940, 1320, 0], [207000, 209000, 4630, 3010, 1390, 0], [209000, 211000, 4700, 3080, 1460, 0], [211000, 213000, 4770, 3150, 1530, 0], [213000, 215000, 4840, 3230, 1600, 0], [215000, 217000, 4910, 3300, 1670, 0], [217000, 219000, 4980, 3370, 1750, 130], [219000, 221000, 5050, 3440, 1820, 200], [221000, 224000, 5150, 3520, 1910, 300], [224000, 227000, 5250, 3630, 2020, 400], [227000, 230000, 5360, 3740, 2120, 510], [230000, 233000, 5460, 3850, 2240, 610], [233000, 236000, 5570, 3950, 2340, 720], [236000, 239000, 5680, 4060, 2450, 830], [239000, 242000, 5790, 4170, 2550, 940], [242000, 245000, 5890, 4280, 2660, 1040], [245000, 248000, 6000, 4380, 2770, 1150], [248000, 251000, 6110, 4490, 2880, 1260], [251000, 254000, 6220, 4590, 2980, 1370], [254000, 257000, 6320, 4710, 3090, 1470], [257000, 260000, 6430, 4810, 3200, 1580], [260000, 263000, 6530, 4920, 3310, 1680], [263000, 266000, 6650, 5020, 3410, 1800], [266000, 269000, 6750, 5140, 3520, 1900], [269000, 272000, 6860, 5240, 3620, 2010], [272000, 275000, 6960, 5350, 3740, 2110], [275000, 278000, 7080, 5450, 3840, 2230], [278000, 281000, 7180, 5560, 3950, 2330], [281000, 284000, 7290, 5670, 4050, 2440], [284000, 287000, 7390, 5780, 4170, 2540], [287000, 290000, 7500, 5880, 4270, 2650], [290000, 293000, 7610, 5990, 4380, 2760], [293000, 296000, 7720, 6100, 4480, 2870], [296000, 299000, 7820, 6210, 4590, 2970], [299000, 302000, 7930, 6320, 4700, 3080], [302000, 305000, 8060, 6440, 4820, 3210], [305000, 308000, 8180, 6570, 4940, 3330], [308000, 311000, 8300, 6690, 5060, 3450], [311000, 314000, 8550, 6810, 5190, 3570], [314000, 317000, 8790, 6930, 5310, 3700], [317000, 320000, 9040, 7060, 5430, 3820], [320000, 323000, 9280, 7180, 5550, 3940], [323000, 326000, 9530, 7300, 5680, 4060], [326000, 329000, 9770, 7420, 5800, 4190], [329000, 332000, 10020, 7550, 5920, 4310], [332000, 335000, 10260, 7670, 6040, 4430], [335000, 338000, 10510, 7790, 6170, 4550], [338000, 341000, 10750, 7910, 6290, 4680], [341000, 344000, 11000, 8040, 6410, 4800], [344000, 347000, 11240, 8160, 6530, 4920], [347000, 350000, 11490, 8280, 6660, 5040], [350000, 353000, 11730, 8500, 6780, 5170], [353000, 356000, 11980, 8750, 6900, 5290], [356000, 359000, 12220, 9000, 7020, 5410], [359000, 362000, 12470, 9240, 7150, 5530], [362000, 365000, 12710, 9490, 7270, 5660], [365000, 368000, 12960, 9730, 7390, 5780], [368000, 371000, 13200, 9980, 7510, 5900], [371000, 374000, 13450, 10220, 7640, 6020], [374000, 377000, 13690, 10470, 7760, 6150], [377000, 380000, 13940, 10710, 7880, 6270], [380000, 383000, 14180, 10960, 8000, 6390], [383000, 386000, 14430, 11200, 8130, 6510], [386000, 389000, 14670, 11450, 8250, 6640], [389000, 392000, 14920, 11690, 8450, 6760], [392000, 395000, 15160, 11940, 8700, 6880], [395000, 398000, 15410, 12180, 8940, 7000], [398000, 401000, 15650, 12430, 9190, 7130], [401000, 404000, 15900, 12670, 9430, 7250], [404000, 407000, 16140, 12920, 9680, 7370], [407000, 410000, 16390, 13160, 9920, 7490], [410000, 413000, 16630, 13410, 10170, 7620], [413000, 416000, 16880, 13650, 10410, 7740], [416000, 419000, 17120, 13900, 10660, 7860], [419000, 422000, 17370, 14140, 10900, 7980], [422000, 425000, 17610, 14390, 11150, 8110], [425000, 428000, 17860, 14630, 11390, 8230], [428000, 431000, 18100, 14880, 11640, 8400], [431000, 434000, 18350, 15120, 11880, 8650], [434000, 437000, 18590, 15370, 12130, 8890], [437000, 440000, 18840, 15610, 12370, 9140], [440000, 443000, 19080, 15860, 12620, 9380], [443000, 446000, 19330, 16100, 12860, 9630], [446000, 449000, 19570, 16350, 13110, 9870], [449000, 452000, 19860, 16590, 13350, 10120], [452000, 455000, 20350, 16840, 13600, 10360], [455000, 458000, 20840, 17080, 13840, 10610], [458000, 461000, 21330, 17330, 14090, 10850], [461000, 464000, 21820, 17570, 14330, 11100], [464000, 467000, 22310, 17820, 14580, 11340], [467000, 470000, 22800, 18060, 14820, 11590], [470000, 473000, 23290, 18310, 15070, 11830], [473000, 476000, 23780, 18550, 15320, 12080], [476000, 479000, 24270, 18800, 15560, 12320], [479000, 482000, 24760, 19040, 15810, 12570], [482000, 485000, 25250, 19290, 16050, 12810], [485000, 488000, 25740, 19530, 16300, 13060], [488000, 491000, 26230, 19780, 16540, 13300], [491000, 494000, 26720, 20260, 16790, 13550], [494000, 497000, 27210, 20750, 17030, 13790], [497000, 500000, 27700, 21240, 17280, 14040], [500000, 503000, 28190, 21730, 17520, 14280], [503000, 506000, 28680, 22220, 17770, 14530], [506000, 509000, 29170, 22710, 18010, 14770], [509000, 512000, 29660, 23200, 18260, 15020], [512000, 515000, 30150, 23690, 18500, 15260], [515000, 518000, 30640, 24180, 18750, 15510], [518000, 521000, 31130, 24670, 18990, 15750], [521000, 524000, 31620, 25160, 19240, 16000], [524000, 527000, 32110, 25650, 19480, 16240], [527000, 530000, 32600, 26140, 19730, 16490], [530000, 533000, 33090, 26630, 20160, 16730], [533000, 536000, 33580, 27120, 20650, 16980], [536000, 539000, 34070, 27610, 21140, 17220], [539000, 542000, 34560, 28100, 21630, 17470], [542000, 545000, 35050, 28590, 22130, 17710], [545000, 548000, 35540, 29080, 22620, 17960], [548000, 551000, 36030, 29570, 23110, 18200], [551000, 554000, 36570, 30110, 23650, 18480], [554000, 557000, 37120, 30660, 24200, 18760], [557000, 560000, 37670, 31210, 24750, 19030], [560000, 563000, 38230, 31760, 25300, 19310], [563000, 566000, 38780, 32310, 25850, 19580], [566000, 569000, 39330, 32870, 26400, 19930], [569000, 572000, 39880, 33420, 26950, 20480], [572000, 575000, 40430, 33970, 27510, 21030], [575000, 578000, 40980, 34520, 28060, 21580], [578000, 581000, 41530, 35070, 28610, 22140], [581000, 584000, 42090, 35620, 29160, 22690], [584000, 587000, 42640, 36170, 29710, 23240], [587000, 590000, 43190, 36730, 30260, 23790], [590000, 593000, 43740, 37280, 30810, 24340], [593000, 596000, 44290, 37830, 31370, 24890], [596000, 599000, 44840, 38380, 31920, 25440], [599000, 602000, 45390, 38930, 32470, 25990], [602000, 605000, 45950, 39480, 33020, 26550], [605000, 608000, 46500, 40030, 33570, 27100], [608000, 611000, 47050, 40580, 34120, 27650], [611000, 614000, 47600, 41140, 34670, 28200], [614000, 617000, 48150, 41690, 35220, 28750], [617000, 620000, 48700, 42240, 35780, 29300], [620000, 623000, 49250, 42790, 36330, 29850], [623000, 626000, 49800, 43340, 36880, 30410], [626000, 629000, 50360, 43890, 37430, 30960], [629000, 632000, 50910, 44440, 37980, 31510], [632000, 635000, 51460, 45000, 38530, 32060], [635000, 638000, 52010, 45550, 39080, 32610], [638000, 641000, 52560, 46100, 39640, 33160], [641000, 644000, 53110, 46650, 40190, 33710], [644000, 647000, 53660, 47200, 40740, 34260], [647000, 650000, 54220, 47750, 41290, 34820], [650000, 653000, 54770, 48300, 41840, 35370], [653000, 656000, 55320, 48850, 42390, 35920], [656000, 659000, 55870, 49410, 42940, 36470], [659000, 662000, 56420, 49960, 43490, 37020], [662000, 665000, 56970, 50510, 44050, 37570], [665000, 668000, 57520, 51060, 44600, 38120], [668000, 671000, 58070, 51610, 45150, 38680], [671000, 674000, 58630, 52160, 45700, 39230], [674000, 677000, 59180, 52710, 46250, 39780], [677000, 680000, 59730, 53270, 46800, 40330], [680000, 683000, 60280, 53820, 47350, 40880], [683000, 686000, 60830, 54370, 47910, 41430], [686000, 689000, 61380, 54920, 48460, 41980], [689000, 692000, 61930, 55470, 49010, 42530], [692000, 695000, 62490, 56020, 49560, 43090], [695000, 698000, 63040, 56570, 50110, 43640], [698000, 701000, 63590, 57120, 50660, 44190], [701000, 704000, 64140, 57680, 51210, 44740], [704000, 707000, 64690, 58230, 51760, 45290], [707000, 710000, 65250, 58780, 52320, 45850], [710000, 713000, 65860, 59390, 52930, 46470], [713000, 716000, 66480, 60000, 53540, 47080], [716000, 719000, 67090, 60620, 54150, 47690], [719000, 722000, 67700, 61230, 54770, 48300], [722000, 725000, 68320, 61840, 55380, 48920], [725000, 728000, 68930, 62450, 55990, 49530], [728000, 731000, 69540, 63070, 56600, 50140], [731000, 734000, 70150, 63680, 57220, 50750], [734000, 737000, 70770, 64290, 57830, 51370], [737000, 740000, 71380, 64900, 58440, 51980]];
+
+const TAX_HIGH = [
+  // [下限, 上限, base[0..3], rate]
+  {min:740000, max:790000, base:[71680,65210,58750,52290], rate:0.2042},
+  {min:790000, max:960000, base:[81890,75420,68960,62500], rate:0.23483},
+  {min:960000, max:1710000, base:[121820,115340,108880,102420], rate:0.33693},
+  {min:1710000, max:2130000, base:[374520,368040,361580,355120], rate:0.4084},
+  {min:2130000, max:2170000, base:[549440,542970,536500,530040], rate:0.4084},
+];
+
+function calcTax(taxable, dep){
+  dep = Math.min(dep,3);
+  if(taxable < 105000) return 0;
+  if(taxable < 740000){
+    for(const row of TAX_TABLE){
+      if(taxable >= row[0] && taxable < row[1]){
+        return row[2+dep];
+      }
+    }
+    // fall through to last bracket
+    const last = TAX_TABLE[TAX_TABLE.length-1];
+    return last[2+dep];
+  }
+  for(const b of TAX_HIGH){
+    if(taxable >= b.min && taxable < b.max){
+      return Math.round(b.base[dep] + (taxable - b.min) * b.rate);
+    }
+  }
+  // beyond 2,170,000 - rough extrapolation
+  const b = TAX_HIGH[TAX_HIGH.length-1];
+  return Math.round(b.base[dep] + (taxable - b.min) * b.rate);
+}
+
+function yen(n){
+  n = Math.round(n);
+  return '¥' + n.toLocaleString('ja-JP');
+}
+
+function el(id){ return document.getElementById(id); }
+
+function currentEmpType(){
+  return document.querySelector('input[name=empType]:checked').value;
+}
+function currentQual(){
+  return document.querySelector('input[name=qual]:checked').value;
+}
+
+function gradeFor(qual, years){
+  years = Math.max(0, Math.round(years));
+  if(qual === 'A'){
+    const n = Math.min(Math.max(years,1), 9);
+    return 'A'+n;
+  } else {
+    const n = Math.min(Math.max(years,1), 7);
+    return 'C'+n;
+  }
+}
+
+function updateVisibility(){
+  const type = currentEmpType();
+  el('hoursBlock').style.display = (type === 'part') ? 'block' : 'none';
+  el('attendanceBlock').style.display = (type === 'day') ? 'block' : 'none';
+}
+
+function recalc(){
+  updateVisibility();
+  const type = currentEmpType();
+  const qual = currentQual();
+  const years = parseFloat(el('years').value) || 0;
+  const hours = parseFloat(el('hours').value) || 0;
+  const salesTotal = parseFloat(el('salesTotal').value) || 0;
+  const salesDesignated = Math.min(parseFloat(el('salesDesignated').value) || 0, salesTotal);
+  const salesTicket = parseFloat(el('salesTicket').value) || 0;
+  const salesRetail = parseFloat(el('salesRetail').value) || 0;
+  const designatedCount = parseFloat(el('designatedCount').value) || 0;
+  const attendance80 = el('attendance80').checked;
+  const over40 = el('over40').checked;
+  const dependents = parseInt(el('dependents').value);
+
+  const grade = gradeFor(qual, years);
+  const [baseSalary, jobAllowance] = GRADE_TABLE[grade];
+  el('out_grade').textContent = grade;
+  el('gradeHint').textContent = `年数から自動判定：${grade}（基本給 ${baseSalary.toLocaleString()}円 ＋ 職務手当 ${jobAllowance.toLocaleString()}円）`;
+
+  // 固定給
+  let fixedPay = 0;
+  if(type === 'regular'){
+    fixedPay = baseSalary + jobAllowance;
+  } else if(type === 'part'){
+    const hourly = Math.round((baseSalary + jobAllowance) / 195.8);
+    fixedPay = Math.ceil(hourly * hours);
+  } else if(type === 'day'){
+    fixedPay = 0; // 新歩合②(6月以降)は歩合オンリー方式として再現
+  }
+  el('out_fixed').textContent = yen(fixedPay);
+
+  // 評価額
+  const freeSales = Math.max(salesTotal - salesDesignated, 0);
+  const hyoka = salesDesignated + salesTicket + freeSales/2;
+  el('out_hyoka').textContent = yen(hyoka);
+
+  // 歩合率
+  let rate = 0;
+  if(type === 'day'){
+    const row = lookupRate(RATE_DAY, hyoka >= 500000 ? Math.floor(hyoka/10000)*10000 : 0);
+    if(row) rate = attendance80 ? row[1] : row[2];
+  } else {
+    const row = lookupRate(RATE_STD, Math.floor(hyoka/100000)*100000);
+    if(row) rate = row[1];
+  }
+  el('out_rate').textContent = (rate*100).toFixed(1) + '%';
+
+  const techComm = hyoka * rate;
+  el('out_techcomm').textContent = yen(techComm);
+
+  const retailComm = Math.ceil(salesRetail * 0.1);
+  el('out_retailcomm').textContent = yen(retailComm);
+
+  const meiComm = designatedCount * 100;
+  el('out_meicomm').textContent = yen(meiComm);
+
+  const gross = fixedPay + techComm + retailComm + meiComm;
+  el('out_gross').textContent = yen(gross);
+
+  // 控除（概算）
+  const kenpo = Math.round(gross * 0.0506);
+  const kaigo = over40 ? Math.round(gross * 0.0081) : 0;
+  const nenkinBase = Math.min(gross, 650000); // 上限概算
+  const nenkin = Math.round(nenkinBase * 0.0915);
+  const koyou = Math.floor(gross * 0.0055);
+  const shaho = kenpo + kaigo + nenkin + koyou;
+
+  el('out_kenpo').textContent = yen(kenpo);
+  el('out_kaigo').textContent = yen(kaigo);
+  el('out_nenkin').textContent = yen(nenkin);
+  el('out_koyou').textContent = yen(koyou);
+
+  const taxable = Math.max(gross - shaho, 0);
+  const gensen = calcTax(taxable, dependents);
+  el('out_gensen').textContent = yen(gensen);
+
+  const gov = shaho + gensen;
+  el('out_gov').textContent = yen(gov);
+
+  const net = gross - shaho - gensen;
+  el('out_net').textContent = yen(net);
+}
+
+document.querySelectorAll('input, select').forEach(elx=>{
+  elx.addEventListener('input', recalc);
+  elx.addEventListener('change', recalc);
+});
+
+recalc();
+</script>
+</body>
+</html>
