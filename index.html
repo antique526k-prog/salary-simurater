@@ -380,6 +380,17 @@
           <span class="unit">人</span>
         </div>
       </div>
+      <div class="field">
+        <label for="meiryoTier">指名料（1人あたり）</label>
+        <select id="meiryoTier">
+          <option value="0">指名料なし</option>
+          <option value="500">500円</option>
+          <option value="1000">1000円</option>
+          <option value="1500">1500円</option>
+          <option value="2000">2000円</option>
+        </select>
+        <div class="hint">指名料に応じて、指名1人あたり+100〜400円が上乗せされます</div>
+      </div>
 
       <div class="field" id="attendanceBlock" style="display:none;">
         <div class="checkline">
@@ -404,7 +415,7 @@
       </div>
 
       <div class="subnote">
-        指名歩合は「指名数×100円」の仮ロジックで計算してます（実際の運用と違うのでようすけさんと後日すり合わせ予定）。住民税・通勤手当・残業代は含みません。
+        指名歩合は基本100円/人＋指名料に応じた上乗せで計算してます。住民税・通勤手当・残業代は含みません。
       </div>
     </div>
 
@@ -426,7 +437,7 @@
         <div class="lineItem"><span class="lbl">技術歩合率</span><span class="val" id="out_rate">0%</span></div>
         <div class="lineItem"><span class="lbl">技術歩合</span><span class="val" id="out_techcomm">¥0</span></div>
         <div class="lineItem"><span class="lbl">店販歩合（10%）</span><span class="val" id="out_retailcomm">¥0</span></div>
-        <div class="lineItem"><span class="lbl">指名歩合（仮）</span><span class="val" id="out_meicomm">¥0</span></div>
+        <div class="lineItem"><span class="lbl">指名歩合<small>基本100円/人＋指名料に応じた上乗せ</small></span><span class="val" id="out_meicomm">¥0</span></div>
 
         <div class="total">
           <span class="lbl">給与支給額（額面）</span>
@@ -439,7 +450,7 @@
         <div class="lineItem"><span class="lbl">厚生年金</span><span class="val" id="out_nenkin">¥0</span></div>
         <div class="lineItem"><span class="lbl">雇用保険</span><span class="val" id="out_koyou">¥0</span></div>
         <div class="lineItem"><span class="lbl">源泉所得税</span><span class="val" id="out_gensen">¥0</span></div>
-        <div class="lineItem"><span class="lbl">市県民税<small>概算10%（本来は前年所得ベース）</small></span><span class="val" id="out_juumin">¥0</span></div>
+        <div class="lineItem"><span class="lbl">市県民税<small>課税対象額×10%－13,600円（概算）</small></span><span class="val" id="out_juumin">¥0</span></div>
 
         <div class="govBox">
           <div class="ttl">🙋 あなたが国・自治体に払っている額</div>
@@ -469,11 +480,11 @@
     <b>この数字について：</b>実際の給与計算（社保は標準報酬月額表、住民税は前年所得ベース等）とは異なる、あくまで「売上を上げたらこれくらい」のイメージを掴むための概算ツールです。
     <ul>
       <li>技術歩合率・店販歩合(10%)・評価額の計算式は実際の給与シートのロジックをそのまま再現しています。</li>
-      <li>指名歩合は「指名数×100円」の仮ロジック。実運用と違うとのことなので、確定ロジックが決まったら差し替えます。</li>
+      <li>指名歩合は「基本100円/人」＋指名料500/1000/1500/2000円に応じた上乗せ（それぞれ+100/200/300/400円）を反映してます。この上乗せ部分の実運用（指名歩合1と2の整合など）はようすけさんと後日すり合わせ予定です。</li>
       <li>Dayの歩合は2026年6月以降の新テーブル（新歩合②）を使用。このテーブルでは固定給を含まない歩合オンリー方式として再現しています（6月分の実データがそうなっていたため）。違ってたら教えてください。</li>
       <li>社会保険料は兵庫県・協会けんぽの令和8年度料率（健保10.12%／介護1.62%／厚生年金18.3%／雇用保険0.55%）を月給にそのまま掛けた概算です。実際は標準報酬月額表を使うため多少ズレます。</li>
       <li>源泉所得税は令和8年分 月額表（甲欄）を実データで再現しているので、この部分は精度高めです。</li>
-      <li>市県民税は本来「前年の所得」を元に計算するものですが、ここではイメージしやすいよう当月の課税対象額×10%で概算してます（実際は1年遅れて反映されます）。</li>
+      <li>市県民税は本来「前年の所得」を元に計算するもので個人差も大きいですが、実際の明細データに近似した簡易式（課税対象額×10%－13,600円、0円未満は0円）で概算してます。</li>
       <li>会社負担分は、健保・介護・厚生年金の折半分に加えて、雇用保険（会社負担分0.90%概算）・労災保険（美容業目安0.30%）・子ども子育て支援金（0.23%、令和8年4月分〜）を会社のみ負担として上乗せしてます。すべて概算です。</li>
     </ul>
   </div>
@@ -589,6 +600,7 @@ function recalc(){
   const salesDesignated = Math.min(parseFloat(el('salesDesignated').value) || 0, salesTotal);
   const salesRetail = parseFloat(el('salesRetail').value) || 0;
   const designatedCount = parseFloat(el('designatedCount').value) || 0;
+  const meiryoTier = parseFloat(el('meiryoTier').value) || 0;
   const attendance80 = el('attendance80').checked;
   const over40 = el('over40').checked;
   const dependents = parseInt(el('dependents').value);
@@ -632,7 +644,7 @@ function recalc(){
   const retailComm = Math.ceil(salesRetail * 0.1);
   el('out_retailcomm').textContent = yen(retailComm);
 
-  const meiComm = designatedCount * 100;
+  const meiComm = designatedCount * (100 + meiryoTier * 0.2);
   el('out_meicomm').textContent = yen(meiComm);
 
   const gross = fixedPay + techComm + retailComm + meiComm;
@@ -655,8 +667,8 @@ function recalc(){
   const gensen = calcTax(taxable, dependents);
   el('out_gensen').textContent = yen(gensen);
 
-  // 市県民税（概算：本来は前年所得ベース。ここでは今月の課税対象額×10%で概算）
-  const juuminzei = Math.round(taxable * 0.10);
+  // 市県民税（概算：実データにフィットした簡易式。基礎控除相当ぶんを差し引いてます）
+  const juuminzei = Math.max(0, Math.round(taxable * 0.10 - 13600));
   el('out_juumin').textContent = yen(juuminzei);
 
   const govPersonal = shahoPersonal + gensen + juuminzei;
